@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package>
+  <name>attention_tracker</name>
+  <version>0.1.0</version>
+  <description>Assess in real time the user's attention focus to compute a level of engagement</description>
+
+  <maintainer email="severin.lemaignan@epfl.ch">Séverin Lemaignan</maintainer>
+  <license>BSD</license>
+  <author >Séverin Lemaignan</author>
+  <author >Fernando Garcia</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+</package>

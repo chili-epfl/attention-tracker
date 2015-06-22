@@ -1,0 +1,10 @@
+<launch>
+  <node name="tablet_transform" pkg="tf" type="static_transform_publisher" args="0.3 0 0 0 0 0 /base_footprint /tablet 100"/>
+  <node name="experimenter_transform" pkg="tf" type="static_transform_publisher" args="0.5 -1.5 1 0 0 0 /base_footprint /experimenter 100"/>
+  <node name="camera_transform" pkg="tf" type="static_transform_publisher" args="0.1 0 0 0 0 0 /base_footprint /head_tracking_camera 100"/>
+
+  <node name="robot_transform" pkg="tf" type="static_transform_publisher" args="0 0 0.5 0 0 0 /base_footprint /robot_head 100"/>
+  <node name="child_transform" pkg="tf" type="static_transform_publisher" args="1 0 0.5 3.14 0.2 0 /base_footprint /child_head 100"/>
+
+  <node pkg="attention_tracker" type="expected_focus" name="expected_focus" />
+</launch>
