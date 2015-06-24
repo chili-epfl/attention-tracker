@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
         visualization_msgs
         sensor_msgs
         cv_bridge
+        image_transport
+        image_geometry
         )
 
 include_directories(${catkin_INCLUDE_DIRS})
@@ -44,10 +46,10 @@ target_link_libraries(expected_focus ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_library(head_pose_estimation STATIC src/head_pose_estimation.cpp)
 target_link_libraries(head_pose_estimation dlib ${OpenCV_LIBRARIES})
 
-#add_executable(head_pose_node src/head_pose_estimation_ros.cpp)
-#target_link_libraries(head_pose_node head_pose_estimation ${catkin_LIBRARIES})
+add_executable(estimate src/head_pose_estimation_ros.cpp src/ros_head_pose_estimator.cpp)
+target_link_libraries(estimate head_pose_estimation ${catkin_LIBRARIES})
 
-install(TARGETS expected_focus
+install(TARGETS expected_focus estimate
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
