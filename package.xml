@@ -6,8 +6,9 @@
 
   <maintainer email="severin.lemaignan@epfl.ch">Séverin Lemaignan</maintainer>
   <license>BSD</license>
-  <author >Séverin Lemaignan</author>
-  <author >Fernando Garcia</author>
+  <author>Séverin Lemaignan</author>
+  <author>Alexis Jacq</author>
+  <author>Fernando Garcia</author>
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>std_msgs</build_depend>

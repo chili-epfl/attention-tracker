@@ -6,9 +6,32 @@
 #include <dlib/image_processing/frontal_face_detector.h>
 
 #include <vector>
+#include <array>
 #include <string>
 
+// Anthropometric values taken from https://en.wikipedia.org/wiki/Human_head
+static const float DIST_SELLION_TO_STOMION= 199 - 124; //mm
+static const float BITRAGION_BREADTH= 155; //mm
+
+
 static const int MAX_FEATURES_TO_TRACK=100;
+
+// Interesting facial features with their landmark index
+enum FACIAL_FEATURE {
+    NOSE=30,
+    RIGHT_SIDE=0,
+    LEFT_SIDE=16,
+    EYEBROW_RIGHT=21,
+    EYEBROW_LEFT=22,
+    MOUTH_UP=51,
+    MOUTH_DOWN=57,
+    MOUTH_RIGHT=48,
+    MOUTH_LEFT=54,
+    SELLION=27,
+    MOUTH_CENTER_TOP=63,
+    MOUTH_CENTER_BOTTOM=66
+};
+
 
 struct head_pose {
     float x, y, z;
@@ -19,24 +42,11 @@ class HeadPoseEstimation {
 
 public:
 
-    // Create a dictionary for the markers.
-    std::map<std::string, int> partToPoint = {
-        {"nose", 30},
-        {"right_side", 2},
-        {"left_side", 14},
-        {"eyebrow_right", 21},
-        {"eyebrow_left", 22},
-        {"mouth_up", 51},
-        {"mouth_down", 57},
-        {"mouth_right", 48},
-        {"mouth_left", 54}
-    };
-
-    HeadPoseEstimation(const std::string& face_detection_model = "shape_predictor_68_face_landmarks.dat");
+    HeadPoseEstimation(const std::string& face_detection_model = "shape_predictor_68_face_landmarks.dat", float focalLength=650.);
 
     void update(cv::Mat image);
 
-    int headSize(size_t face_idx);
+    std::array<float,2> headDimensions(size_t face_idx);
 
     bool smileDetector(size_t face_idx);
 
@@ -56,6 +66,8 @@ public:
                             std::vector<cv::Point2f> &points2, 
                             bool needToInit);
 
+    float focalLength;
+
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
     cv::Mat _debug;
 #endif
@@ -71,10 +83,10 @@ private:
 
     std::vector<dlib::full_object_detection> shapes;
 
+
     /** Return the point corresponding to the dictionary marker.
     */
-    cv::Point2f getPointFromPart(size_t face_idx, 
-                                 std::string name);
+    cv::Point2f coordsOf(size_t face_idx, FACIAL_FEATURE feature);
 
     /** Returns true if the lines intersect, false otherwise.
     */

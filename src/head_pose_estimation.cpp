@@ -3,6 +3,7 @@
 
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
 #include <opencv2/imgproc/imgproc.hpp>
+#include <iostream>
 #endif
 
 #include "head_pose_estimation.hpp"
@@ -17,7 +18,9 @@ inline Point2f toCv(const dlib::point& p)
 }
 
 
-HeadPoseEstimation::HeadPoseEstimation(const string& face_detection_model) {
+HeadPoseEstimation::HeadPoseEstimation(const string& face_detection_model, float focalLength) :
+        focalLength(focalLength)
+{
 
         // Load face detection and pose estimation models.
         detector = get_frontal_face_detector();
@@ -43,11 +46,15 @@ void HeadPoseEstimation::update(cv::Mat image)
     
     _debug = image.clone();
 
-    auto color = Scalar(255,255,0);
+    auto color = Scalar(0,255,128);
 
     for (unsigned long i = 0; i < shapes.size(); ++i)
     {
         const full_object_detection& d = shapes[i];
+
+        for (auto i = 0; i < 68 ; i++) {
+            putText(_debug, to_string(i), toCv(d.part(i)), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,0));
+        }
         for (unsigned long i = 1; i <= 16; ++i)
             line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, LINE_AA);
 
@@ -81,23 +88,53 @@ void HeadPoseEstimation::update(cv::Mat image)
 #endif
 }
 
+
+std::array<float,2> HeadPoseEstimation::headDimensions(size_t face_idx)
+{
+    auto right = coordsOf(face_idx, RIGHT_SIDE);
+    auto left = coordsOf(face_idx, LEFT_SIDE);
+
+    float width = sqrt((right.x-left.x)*(right.x-left.x) + (right.y-left.y)*(right.y-left.y));
+
+    auto sellion = coordsOf(face_idx, SELLION);
+    auto stomion = (coordsOf(face_idx, MOUTH_CENTER_TOP) + coordsOf(face_idx, MOUTH_CENTER_BOTTOM)) / 2;
+
+    float height = sqrt((sellion.x-stomion.x)*(sellion.x-stomion.x) + (sellion.y-stomion.y)*(sellion.y-stomion.y));
+
+#ifdef HEAD_POSE_ESTIMATION_DEBUG
+    line(_debug, right, left, Scalar(0,255,255), 1, LINE_AA);
+    line(_debug, sellion, stomion, Scalar(0,255,255), 1, LINE_AA);
+    putText(_debug, to_string(width), (left + right) / 2, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,0));
+    putText(_debug, to_string(height), (sellion + stomion) / 2, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,0));
+#endif
+
+    return {width, height};
+
+}
+
 head_pose HeadPoseEstimation::pose(size_t face_idx)
 {
 
     head_pose pose;
 
+    auto head_size = headDimensions(face_idx);
+
+    // compute the head's distance as the max of a distance computed with the head breadth and one computed with the face height
+    // We take the max as an easy way to compensate for either pitch or yaw rotations
+    auto head_distance = max(BITRAGION_BREADTH * focalLength / head_size[0],
+                             DIST_SELLION_TO_STOMION * focalLength / head_size[1]);
 
     // Get nose
-    Point2f nose = getPointFromPart(face_idx, "nose");
+    Point2f nose = coordsOf(face_idx, NOSE);
 
     /*float nose.x = pose_model(current_image, faces[i]).part(30).x();
     float nose.y = pose_model(current_image, faces[i]).part(30).y();
     noses.push_back(centered_rect(point(nose.x,nose.y),8,8));*/
 
     //get rights
-    Point2f right = getPointFromPart(face_idx, "right_side");
+    Point2f right = coordsOf(face_idx, RIGHT_SIDE);
     //get lefts
-    Point2f left = getPointFromPart(face_idx, "left_side");
+    Point2f left = coordsOf(face_idx, LEFT_SIDE);
 
     float horRight = sqrt((right.x-nose.x)*(right.x-nose.x) + (right.y-nose.y)*(right.y-nose.y));
     float horLeft = sqrt((left.x-nose.x)*(left.x-nose.x) + (left.y-nose.y)*(left.y-nose.y));
@@ -137,9 +174,9 @@ head_pose HeadPoseEstimation::pose(size_t face_idx)
     //auto x_gaze = sin(east_west)*len/20;
     //auto y_gaze = sin(south_north)*wid/20;
 
-    pose.x = 1;//nose.x;
-    pose.y = 0;//nose.y;
-    pose.z = 1;
+    pose.x = head_distance * nose.x / focalLength;
+    pose.y = head_distance * nose.y / focalLength;
+    pose.z = head_distance;
     pose.pitch = south_north;
     pose.yaw = east_west;
 
@@ -158,14 +195,9 @@ std::vector<head_pose> HeadPoseEstimation::poses() {
 
 }
 
-Point2f HeadPoseEstimation::getPointFromPart(size_t face_idx, 
-                                             string name)
+Point2f HeadPoseEstimation::coordsOf(size_t face_idx, FACIAL_FEATURE feature)
 {
-    Point2f point;
-    point.x = shapes[face_idx].part(partToPoint[name]).x();
-    point.y = shapes[face_idx].part(partToPoint[name]).y();
-
-    return point;
+    return toCv(shapes[face_idx].part(feature));
 }
 
 bool HeadPoseEstimation::getLineIntersection(float p0_x, float p0_y, float p1_x, float p1_y,
