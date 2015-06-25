@@ -37,6 +37,8 @@ void HeadPoseEstimator::detectFaces(const sensor_msgs::ImageConstPtr& msg,
     warnUncalibratedImage = true;
     
     estimator.focalLength = cameramodel.fx(); 
+    estimator.opticalCenterX = cameramodel.cx();
+    estimator.opticalCenterY = cameramodel.cy();
 
     // hopefully no copy here:
     //  - assignement operator of cv::Mat does not copy the data
@@ -63,10 +65,14 @@ void HeadPoseEstimator::detectFaces(const sensor_msgs::ImageConstPtr& msg,
         face_pose.stamp_ = ros::Time::now() + ros::Duration(TRANSFORM_FUTURE_DATING);
 
         tf::Quaternion q;
-        q.setRPY(0., pose.pitch, pose.yaw);
+
+        q.setRPY(0., -pose.pitch, pose.yaw);
         face_pose.setRotation(q);
 
-        face_pose.setOrigin(tf::Vector3(pose.x, pose.y, pose.z));
+        // We assume the frame orientation of the camera follows the ROS
+        // convention (x forward, y left, z up) and *not* the classical camera
+        // convention (z forward)
+        face_pose.setOrigin(tf::Vector3(pose.z/1000, -pose.x/1000, -pose.y/1000));
 
         br.sendTransform(face_pose);
 
