@@ -38,6 +38,9 @@ void HeadPoseEstimation::update(cv::Mat image)
     {
         opticalCenterX = image.cols / 2;
         opticalCenterY = image.rows / 2;
+#ifdef HEAD_POSE_ESTIMATION_DEBUG
+        cerr << "Setting the optical center to (" << opticalCenterX << ", " << opticalCenterY << ")" << endl;
+#endif
     }
 
     current_image = cv_image<bgr_pixel>(image);
@@ -65,34 +68,34 @@ void HeadPoseEstimation::update(cv::Mat image)
             putText(_debug, to_string(i), toCv(d.part(i)), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,0));
         }
         for (unsigned long i = 1; i <= 16; ++i)
-            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, LINE_AA);
+            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, CV_AA);
 
         for (unsigned long i = 28; i <= 30; ++i)
-            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, LINE_AA);
+            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, CV_AA);
 
         for (unsigned long i = 18; i <= 21; ++i)
-            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, LINE_AA);
+            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, CV_AA);
         for (unsigned long i = 23; i <= 26; ++i)
-            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, LINE_AA);
+            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, CV_AA);
         for (unsigned long i = 31; i <= 35; ++i)
-            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, LINE_AA);
-        line(_debug, toCv(d.part(30)), toCv(d.part(35)), color, 2, LINE_AA);
+            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, CV_AA);
+        line(_debug, toCv(d.part(30)), toCv(d.part(35)), color, 2, CV_AA);
 
         for (unsigned long i = 37; i <= 41; ++i)
-            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, LINE_AA);
-        line(_debug, toCv(d.part(36)), toCv(d.part(41)), color, 2, LINE_AA);
+            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, CV_AA);
+        line(_debug, toCv(d.part(36)), toCv(d.part(41)), color, 2, CV_AA);
 
         for (unsigned long i = 43; i <= 47; ++i)
-            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, LINE_AA);
-        line(_debug, toCv(d.part(42)), toCv(d.part(47)), color, 2, LINE_AA);
+            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, CV_AA);
+        line(_debug, toCv(d.part(42)), toCv(d.part(47)), color, 2, CV_AA);
 
         for (unsigned long i = 49; i <= 59; ++i)
-            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, LINE_AA);
-        line(_debug, toCv(d.part(48)), toCv(d.part(59)), color, 2, LINE_AA);
+            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, CV_AA);
+        line(_debug, toCv(d.part(48)), toCv(d.part(59)), color, 2, CV_AA);
 
         for (unsigned long i = 61; i <= 67; ++i)
-            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, LINE_AA);
-        line(_debug, toCv(d.part(60)), toCv(d.part(67)), color, 2, LINE_AA);
+            line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, CV_AA);
+        line(_debug, toCv(d.part(60)), toCv(d.part(67)), color, 2, CV_AA);
     }
 #endif
 }
@@ -107,17 +110,17 @@ head_pose HeadPoseEstimation::pose(size_t face_idx)
     auto right = coordsOf(face_idx, RIGHT_SIDE);
     auto left = coordsOf(face_idx, LEFT_SIDE);
     auto sellion = coordsOf(face_idx, SELLION);
-    auto stomion = (coordsOf(face_idx, MOUTH_CENTER_TOP) + coordsOf(face_idx, MOUTH_CENTER_BOTTOM)) / 2;
+    auto stomion = (coordsOf(face_idx, MOUTH_CENTER_TOP) + coordsOf(face_idx, MOUTH_CENTER_BOTTOM)) * 0.5;
 
     // head dimensions (in pixels!)
     float width = norm(right - left);
     float height = norm(sellion - stomion);
 
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
-    line(_debug, right, left, Scalar(0,255,255), 1, LINE_AA);
-    line(_debug, sellion, stomion, Scalar(0,255,255), 1, LINE_AA);
-    putText(_debug, to_string(width), (left + right) / 2, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,0));
-    putText(_debug, to_string(height), (sellion + stomion) / 2, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,0));
+    line(_debug, right, left, Scalar(0,255,255), 1, CV_AA);
+    line(_debug, sellion, stomion, Scalar(0,255,255), 1, CV_AA);
+    putText(_debug, to_string(width), (left + right) * .5, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,0));
+    putText(_debug, to_string(height), (sellion + stomion) * .5, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,0));
 #endif
 
     // compute the head's distance in mm as the max of a distance computed with the
@@ -155,7 +158,8 @@ head_pose HeadPoseEstimation::pose(size_t face_idx)
     pose.yaw = yaw;
 
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
-    putText(_debug, "(" + to_string(int(pose.x/10)) + "cm, " + to_string(int(pose.y/10)) + "cm, " + to_string(int(pose.z/10)) + "cm)", width_heigth_intersection, FONT_HERSHEY_SIMPLEX, 0.7, Scalar(0,0,255),2);
+    putText(_debug, "(" + to_string(int(pose.x/10)) + "cm, " + to_string(int(pose.y/10)) + "cm, " + to_string(int(pose.z/10)) + "cm)", width_heigth_intersection, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255),2);
+    putText(_debug, "yaw: " + to_string(int(pose.yaw * 180/M_PI)) + "deg, pitch: " + to_string(int(pose.pitch * 180/M_PI)) + "deg", width_heigth_intersection + Point2f(0,20), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255),2);
 #endif
 
 

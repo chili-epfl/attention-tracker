@@ -33,7 +33,7 @@ if(WITH_ROS)
     )
 endif()
 
-find_package(OpenCV REQUIRED)
+find_package(OpenCV COMPONENTS core imgproc highgui REQUIRED)
 
 message(STATUS "OpenCV version: ${OpenCV_VERSION}")
 if(${OpenCV_VERSION} VERSION_GREATER 2.9.0)
@@ -45,19 +45,11 @@ endif()
 
 if(DEBUG)
     add_definitions(-DHEAD_POSE_ESTIMATION_DEBUG)
-    if(OPENCV3)
-        find_package(OpenCV COMPONENTS core imgproc highgui videoio REQUIRED)
-    else()
-        find_package(OpenCV COMPONENTS core imgproc highgui REQUIRED)
-    endif()
-
-else()
-    find_package(OpenCV COMPONENTS core imgproc REQUIRED)
 endif()
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_library(head_pose_estimation STATIC src/head_pose_estimation.cpp)
+add_library(head_pose_estimation SHARED src/head_pose_estimation.cpp)
 target_link_libraries(head_pose_estimation dlib ${OpenCV_LIBRARIES})
 
 if(WITH_ROS)
@@ -72,7 +64,7 @@ if(WITH_ROS)
     add_executable(estimate src/head_pose_estimation_ros.cpp src/ros_head_pose_estimator.cpp)
     target_link_libraries(estimate head_pose_estimation ${catkin_LIBRARIES})
 
-    install(TARGETS expected_focus estimate
+    install(TARGETS expected_focus head_pose_estimation estimate
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -80,11 +72,19 @@ if(WITH_ROS)
 
     install(FILES
         launch/attention_tracking.launch
+        calib/logitech-c920_640x360.ini
+        share/shape_predictor_68_face_landmarks.dat
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
     )
 endif()
 
 if(WITH_TESTS)
+    if(OPENCV3)
+        find_package(OpenCV COMPONENTS core imgproc highgui videoio REQUIRED)
+    else()
+        find_package(OpenCV COMPONENTS core imgproc highgui REQUIRED)
+    endif()
+
     # visualizations need to be enabled
     add_definitions(-DHEAD_POSE_ESTIMATION_DEBUG)
 

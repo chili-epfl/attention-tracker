@@ -17,6 +17,10 @@ HeadPoseEstimator::HeadPoseEstimator(ros::NodeHandle& rosNode,
 
 {
     sub = it.subscribeCamera("image", 1, &HeadPoseEstimator::detectFaces, this);
+
+#ifdef HEAD_POSE_ESTIMATION_DEBUG
+    pub = it.advertise("attention_tracker/faces/image",1);
+#endif
 }
 
 void HeadPoseEstimator::detectFaces(const sensor_msgs::ImageConstPtr& msg, 
@@ -66,17 +70,29 @@ void HeadPoseEstimator::detectFaces(const sensor_msgs::ImageConstPtr& msg,
 
         tf::Quaternion q;
 
-        q.setRPY(0., -pose.pitch, pose.yaw);
-        face_pose.setRotation(q);
 
-        // We assume the frame orientation of the camera follows the ROS
+        // Frame orientation of the camera follows the ROS
         // convention (x forward, y left, z up) and *not* the classical camera
         // convention (z forward)
-        face_pose.setOrigin(tf::Vector3(pose.z/1000, -pose.x/1000, -pose.y/1000));
+        //q.setRPY(0., -pose.pitch, pose.yaw);
+        //face_pose.setOrigin(tf::Vector3(pose.z/1000, -pose.x/1000, -pose.y/1000));
 
+        // Frame orientation of the camera follows the classical camera
+        // convention (Z forward)
+        q.setRPY(0., -pose.pitch + M_PI/2, pose.yaw);
+        face_pose.setOrigin(tf::Vector3(pose.x/1000, pose.y/1000, pose.z/1000));
+
+        face_pose.setRotation(q);
         br.sendTransform(face_pose);
 
     }
 
+#ifdef HEAD_POSE_ESTIMATION_DEBUG
+    if(pub.getNumSubscribers() > 0) {
+        ROS_INFO_ONCE("Starting to publish face tracking output for debug");
+        auto debugmsg = cv_bridge::CvImage(msg->header, "bgr8", estimator._debug).toImageMsg();
+        pub.publish(debugmsg);
+    }
+#endif
 }
 

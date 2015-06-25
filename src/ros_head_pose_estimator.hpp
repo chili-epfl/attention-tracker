@@ -11,7 +11,9 @@
 #include <tf/transform_broadcaster.h>
 #include <image_transport/image_transport.h>
 
-#define CV_INTER_LINEAR 1 // for compatibility with opencv 3
+#ifdef OPENCV3
+#define CV_INTER_LINEAR 1
+#endif
 #include <image_geometry/pinhole_camera_model.h>
 
 #include <cv_bridge/cv_bridge.h>
@@ -29,6 +31,7 @@ private:
     ros::NodeHandle& rosNode;
     image_transport::ImageTransport it;
     image_transport::CameraSubscriber sub;
+    image_transport::Publisher pub;
 
     tf::TransformBroadcaster br;
     tf::Transform transform;

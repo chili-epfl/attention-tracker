@@ -26,6 +26,14 @@ int main(int argc, char **argv)
 
     VideoCapture video_in(1);
 
+    // settings for the Logitech c920
+    video_in.set(CAP_PROP_FRAME_WIDTH, 640);
+    video_in.set(CAP_PROP_FRAME_HEIGHT, 360);
+
+    estimator.focalLength = 455;
+    estimator.opticalCenterX = 313;
+    estimator.opticalCenterY = 167;
+
     if(!video_in.isOpened()) {
         cerr << "Couldn't open camera" << endl;
         return 1;
