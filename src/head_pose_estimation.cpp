@@ -19,7 +19,9 @@ inline Point2f toCv(const dlib::point& p)
 
 
 HeadPoseEstimation::HeadPoseEstimation(const string& face_detection_model, float focalLength) :
-        focalLength(focalLength)
+        focalLength(focalLength),
+        opticalCenterX(-1),
+        opticalCenterY(-1)
 {
 
         // Load face detection and pose estimation models.
@@ -31,7 +33,14 @@ HeadPoseEstimation::HeadPoseEstimation(const string& face_detection_model, float
 
 void HeadPoseEstimation::update(cv::Mat image)
 {
-    current_image = image;
+
+    if (opticalCenterX == -1) // not initialized yet
+    {
+        opticalCenterX = image.cols / 2;
+        opticalCenterY = image.rows / 2;
+    }
+
+    current_image = cv_image<bgr_pixel>(image);
 
     faces = detector(current_image);
 
@@ -89,17 +98,20 @@ void HeadPoseEstimation::update(cv::Mat image)
 }
 
 
-std::array<float,2> HeadPoseEstimation::headDimensions(size_t face_idx)
+head_pose HeadPoseEstimation::pose(size_t face_idx)
 {
+
+    head_pose pose;
+
+    // facial features coordinates used for head pose estimation
     auto right = coordsOf(face_idx, RIGHT_SIDE);
     auto left = coordsOf(face_idx, LEFT_SIDE);
-
-    float width = sqrt((right.x-left.x)*(right.x-left.x) + (right.y-left.y)*(right.y-left.y));
-
     auto sellion = coordsOf(face_idx, SELLION);
     auto stomion = (coordsOf(face_idx, MOUTH_CENTER_TOP) + coordsOf(face_idx, MOUTH_CENTER_BOTTOM)) / 2;
 
-    float height = sqrt((sellion.x-stomion.x)*(sellion.x-stomion.x) + (sellion.y-stomion.y)*(sellion.y-stomion.y));
+    // head dimensions (in pixels!)
+    float width = norm(right - left);
+    float height = norm(sellion - stomion);
 
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
     line(_debug, right, left, Scalar(0,255,255), 1, LINE_AA);
@@ -108,77 +120,44 @@ std::array<float,2> HeadPoseEstimation::headDimensions(size_t face_idx)
     putText(_debug, to_string(height), (sellion + stomion) / 2, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,0));
 #endif
 
-    return {width, height};
-
-}
-
-head_pose HeadPoseEstimation::pose(size_t face_idx)
-{
-
-    head_pose pose;
-
-    auto head_size = headDimensions(face_idx);
-
-    // compute the head's distance as the max of a distance computed with the head breadth and one computed with the face height
-    // We take the max as an easy way to compensate for either pitch or yaw rotations
-    auto head_distance = max(BITRAGION_BREADTH * focalLength / head_size[0],
-                             DIST_SELLION_TO_STOMION * focalLength / head_size[1]);
-
-    // Get nose
-    Point2f nose = coordsOf(face_idx, NOSE);
-
-    /*float nose.x = pose_model(current_image, faces[i]).part(30).x();
-    float nose.y = pose_model(current_image, faces[i]).part(30).y();
-    noses.push_back(centered_rect(point(nose.x,nose.y),8,8));*/
-
-    //get rights
-    Point2f right = coordsOf(face_idx, RIGHT_SIDE);
-    //get lefts
-    Point2f left = coordsOf(face_idx, LEFT_SIDE);
-
-    float horRight = sqrt((right.x-nose.x)*(right.x-nose.x) + (right.y-nose.y)*(right.y-nose.y));
-    float horLeft = sqrt((left.x-nose.x)*(left.x-nose.x) + (left.y-nose.y)*(left.y-nose.y));
-    float horizontal = sqrt((right.x-left.x)*(right.x-left.x) + (right.y-left.y)*(right.y-left.y));
-    auto east_west = (horRight-horLeft)/horizontal; // -1<score<1
-
-    float l = horRight*horizontal/(horRight+horLeft);
-    float xl = right.x+(left.x-right.x)*l/horizontal;
-    float yl = right.y+(left.y-right.y)*l/horizontal;
-
-    float sh = (yl-nose.y)/abs(nose.y-yl);
-    float h = sqrt((nose.y-yl)*(nose.y-yl) + (nose.x-xl)*(nose.x-xl));
-    float south_north = sh*h/horRight;
+    // compute the head's distance in mm as the max of a distance computed with the
+    // head breadth and one computed with the face height We take the max as an
+    // easy way to compensate for either pitch or yaw rotations
+    auto head_distance = max(BITRAGION_BREADTH * focalLength / width,
+                             DIST_SELLION_TO_STOMION * focalLength / height);
 
 
-    // compute "discrete" gaze directions
-    // TODO: not used for now!
-    std::vector<bool> lookAt(4);
-    lookAt[1] = east_west>0.3;
-    lookAt[0] = east_west<-0.3;
-    lookAt[2] = south_north>0.3;
-    lookAt[3] = south_north<-0.3;
+    Point2f width_heigth_intersection;
+    intersection(right, left, sellion, stomion, width_heigth_intersection);
+#ifdef HEAD_POSE_ESTIMATION_DEBUG
+    circle(_debug, width_heigth_intersection,2, Scalar(0,0,255));
+#endif
 
-    //hack for southnord between -1 and 1 :
-    if(south_north>0){
-        south_north = south_north/0.45;
-    }
-    if(south_north<0){
-        south_north = south_north/0.37;
-    }
 
-    //convert values to have measure of angles:
-    south_north = (M_PI/4)*south_north - M_PI/2;
-    east_west = (M_PI/3)*east_west;
+    // yaw
+    float width_right = norm(right - width_heigth_intersection); 
+    float width_left = norm(left - width_heigth_intersection); 
+    auto east_west = (width_right - width_left) / width; // -1<score<1
+    auto yaw = M_PI/3 * east_west + M_PI;
 
-    //get projection (if we want to plot on the window) :
-    //auto x_gaze = sin(east_west)*len/20;
-    //auto y_gaze = sin(south_north)*wid/20;
+    // pitch
+    auto south_north = norm(stomion - width_heigth_intersection) / height;
 
-    pose.x = head_distance * nose.x / focalLength;
-    pose.y = head_distance * nose.y / focalLength;
+    // normalize: 0.9 is the 'south_north' ratio when facing the camera
+    // then, on my face, the ratio value goes from ~0.4 to ~1.4
+    south_north = -std::min(1., std::max(-1.,(south_north - 0.9) / 0.5));
+    auto pitch = M_PI/4 * south_north;
+
+    pose.x = (width_heigth_intersection.x - opticalCenterX) * head_distance / focalLength;
+    pose.y = (width_heigth_intersection.y - opticalCenterY) * head_distance / focalLength;
     pose.z = head_distance;
-    pose.pitch = south_north;
-    pose.yaw = east_west;
+    pose.pitch = pitch;
+    pose.yaw = yaw;
+
+#ifdef HEAD_POSE_ESTIMATION_DEBUG
+    putText(_debug, "(" + to_string(int(pose.x/10)) + "cm, " + to_string(int(pose.y/10)) + "cm, " + to_string(int(pose.z/10)) + "cm)", width_heigth_intersection, FONT_HERSHEY_SIMPLEX, 0.7, Scalar(0,0,255),2);
+#endif
+
 
     return pose;
 }
@@ -200,23 +179,22 @@ Point2f HeadPoseEstimation::coordsOf(size_t face_idx, FACIAL_FEATURE feature)
     return toCv(shapes[face_idx].part(feature));
 }
 
-bool HeadPoseEstimation::getLineIntersection(float p0_x, float p0_y, float p1_x, float p1_y,
-                           float p2_x, float p2_y, float p3_x, float p3_y){
+// Finds the intersection of two lines, or returns false.
+// The lines are defined by (o1, p1) and (o2, p2).
+// taken from: http://stackoverflow.com/a/7448287/828379
+bool HeadPoseEstimation::intersection(Point2f o1, Point2f p1, Point2f o2, Point2f p2,
+                                      Point2f &r)
+{
+    Point2f x = o2 - o1;
+    Point2f d1 = p1 - o1;
+    Point2f d2 = p2 - o2;
 
-    float s1_x, s1_y, s2_x, s2_y;
+    float cross = d1.x*d2.y - d1.y*d2.x;
+    if (abs(cross) < /*EPS*/1e-8)
+        return false;
 
-    s1_x = p1_x - p0_x;     s1_y = p1_y - p0_y;
-    s2_x = p3_x - p2_x;     s2_y = p3_y - p2_y;
-
-    float s, t;
-
-    s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
-    t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
-
-    if (s >= 0 && s <= 1 && t >= 0 && t <= 1){
-        return true;
-    }
-    return false;
+    double t1 = (x.x * d2.y - x.y * d2.x)/cross;
+    r = o1 + d1 * t1;
+    return true;
 }
-
 

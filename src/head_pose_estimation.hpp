@@ -9,7 +9,8 @@
 #include <array>
 #include <string>
 
-// Anthropometric values taken from https://en.wikipedia.org/wiki/Human_head
+// Anthropometric for male adult
+// Values taken from https://en.wikipedia.org/wiki/Human_head
 static const float DIST_SELLION_TO_STOMION= 199 - 124; //mm
 static const float BITRAGION_BREADTH= 155; //mm
 
@@ -28,7 +29,7 @@ enum FACIAL_FEATURE {
     MOUTH_RIGHT=48,
     MOUTH_LEFT=54,
     SELLION=27,
-    MOUTH_CENTER_TOP=63,
+    MOUTH_CENTER_TOP=62,
     MOUTH_CENTER_BOTTOM=66
 };
 
@@ -45,8 +46,6 @@ public:
     HeadPoseEstimation(const std::string& face_detection_model = "shape_predictor_68_face_landmarks.dat", float focalLength=650.);
 
     void update(cv::Mat image);
-
-    std::array<float,2> headDimensions(size_t face_idx);
 
     bool smileDetector(size_t face_idx);
 
@@ -67,6 +66,8 @@ public:
                             bool needToInit);
 
     float focalLength;
+    float opticalCenterX;
+    float opticalCenterY;
 
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
     cv::Mat _debug;
@@ -88,10 +89,12 @@ private:
     */
     cv::Point2f coordsOf(size_t face_idx, FACIAL_FEATURE feature);
 
-    /** Returns true if the lines intersect, false otherwise.
-    */
-    bool getLineIntersection(float p0_x, float p0_y, float p1_x, float p1_y,
-                            float p2_x, float p2_y, float p3_x, float p3_y);
+    /** Returns true if the lines intersect (and set r to the intersection
+     *  coordinates), false otherwise.
+     */
+    bool intersection(cv::Point2f o1, cv::Point2f p1,
+                      cv::Point2f o2, cv::Point2f p2,
+                      cv::Point2f &r);
 
 };
 
