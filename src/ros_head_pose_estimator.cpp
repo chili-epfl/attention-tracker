@@ -68,21 +68,18 @@ void HeadPoseEstimator::detectFaces(const sensor_msgs::ImageConstPtr& msg,
         face_pose.child_frame_id_ = "face_" + to_string(face_idx);
         face_pose.stamp_ = ros::Time::now() + ros::Duration(TRANSFORM_FUTURE_DATING);
 
-        tf::Quaternion q;
-
-
-        // Frame orientation of the camera follows the ROS
-        // convention (x forward, y left, z up) and *not* the classical camera
-        // convention (z forward)
-        //q.setRPY(0., -pose.pitch, pose.yaw);
-        //face_pose.setOrigin(tf::Vector3(pose.z/1000, -pose.x/1000, -pose.y/1000));
-
         // Frame orientation of the camera follows the classical camera
         // convention (Z forward)
-        q.setRPY(0., -pose.pitch + M_PI/2, pose.yaw);
-        face_pose.setOrigin(tf::Vector3(pose.x/1000, pose.y/1000, pose.z/1000));
+        tf::Matrix3x3 rotation(pose.rotation(0,0), pose.rotation(0,1), pose.rotation(0,2),
+                               pose.rotation(1,0), pose.rotation(1,1), pose.rotation(1,2),
+                               pose.rotation(2,0), pose.rotation(2,1), pose.rotation(2,2));
 
+        rotation = rotation.transpose();
+        tf::Quaternion q;
+        rotation.getRotation(q);
         face_pose.setRotation(q);
+        face_pose.setOrigin(tf::Vector3(-pose.x, -pose.y, -pose.z));
+
         br.sendTransform(face_pose);
 
     }

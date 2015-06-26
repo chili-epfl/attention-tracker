@@ -14,12 +14,26 @@
 static const float DIST_SELLION_TO_STOMION= 199 - 124; //mm
 static const float BITRAGION_BREADTH= 155; //mm
 
+// Relative position of various facial feature relative to sellion
+// X poits forward
+const static cv::Point3f P3D_SELLION(0., 0.,0.);
+const static cv::Point3f P3D_RIGHT_EYE(-20., -65.5,-5.);
+const static cv::Point3f P3D_LEFT_EYE(-20., 65.5,-5.);
+const static cv::Point3f P3D_RIGHT_EAR(-100., -77.5,-6.);
+const static cv::Point3f P3D_LEFT_EAR(-100., 77.5,-6.);
+const static cv::Point3f P3D_MENTON(0., 0.,-133.0);
+const static cv::Point3f P3D_NOSE(21.0, 0., -48.0);
+const static cv::Point3f P3D_STOMMION(10.0, 0., -75.0);
+
+
 
 static const int MAX_FEATURES_TO_TRACK=100;
 
 // Interesting facial features with their landmark index
 enum FACIAL_FEATURE {
     NOSE=30,
+    RIGHT_EYE=36,
+    LEFT_EYE=45,
     RIGHT_SIDE=0,
     LEFT_SIDE=16,
     EYEBROW_RIGHT=21,
@@ -30,20 +44,21 @@ enum FACIAL_FEATURE {
     MOUTH_LEFT=54,
     SELLION=27,
     MOUTH_CENTER_TOP=62,
-    MOUTH_CENTER_BOTTOM=66
+    MOUTH_CENTER_BOTTOM=66,
+    MENTON=8
 };
 
 
 struct head_pose {
-    float x, y, z;
-    float pitch, yaw;
+    float x, y, z; // in meters
+    cv::Matx33d rotation;
 };
 
 class HeadPoseEstimation {
 
 public:
 
-    HeadPoseEstimation(const std::string& face_detection_model = "shape_predictor_68_face_landmarks.dat", float focalLength=650.);
+    HeadPoseEstimation(const std::string& face_detection_model = "shape_predictor_68_face_landmarks.dat", float focalLength=455.);
 
     void update(cv::Mat image);
 

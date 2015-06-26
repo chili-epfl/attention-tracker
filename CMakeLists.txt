@@ -33,7 +33,7 @@ if(WITH_ROS)
     )
 endif()
 
-find_package(OpenCV COMPONENTS core imgproc highgui REQUIRED)
+find_package(OpenCV COMPONENTS core imgproc calib3d highgui REQUIRED)
 
 message(STATUS "OpenCV version: ${OpenCV_VERSION}")
 if(${OpenCV_VERSION} VERSION_GREATER 2.9.0)
@@ -80,9 +80,9 @@ endif()
 
 if(WITH_TESTS)
     if(OPENCV3)
-        find_package(OpenCV COMPONENTS core imgproc highgui videoio REQUIRED)
+        find_package(OpenCV COMPONENTS core imgproc calib3d highgui videoio REQUIRED)
     else()
-        find_package(OpenCV COMPONENTS core imgproc highgui REQUIRED)
+        find_package(OpenCV COMPONENTS core imgproc calib3d highgui REQUIRED)
     endif()
 
     # visualizations need to be enabled

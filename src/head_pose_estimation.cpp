@@ -1,6 +1,8 @@
 #include <cmath>
 #include <ctime>
 
+#include <opencv2/calib3d/calib3d.hpp>
+
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
@@ -100,68 +102,86 @@ void HeadPoseEstimation::update(cv::Mat image)
 #endif
 }
 
-
 head_pose HeadPoseEstimation::pose(size_t face_idx)
 {
-
     head_pose pose;
 
-    // facial features coordinates used for head pose estimation
-    auto right = coordsOf(face_idx, RIGHT_SIDE);
-    auto left = coordsOf(face_idx, LEFT_SIDE);
-    auto sellion = coordsOf(face_idx, SELLION);
+    cv::Mat projectionMat = cv::Mat::zeros(3,3,CV_32F);
+    cv::Matx33f projection = projectionMat;
+    projection(0,0) = focalLength;
+    projection(1,1) = focalLength;
+    projection(0,2) = opticalCenterX;
+    projection(1,2) = opticalCenterY;
+    projection(2,2) = 1;
+
+    std::vector<Point3f> head_points;
+
+    head_points.push_back(P3D_SELLION);
+    head_points.push_back(P3D_RIGHT_EYE);
+    head_points.push_back(P3D_LEFT_EYE);
+    head_points.push_back(P3D_RIGHT_EAR);
+    head_points.push_back(P3D_LEFT_EAR);
+    head_points.push_back(P3D_MENTON);
+    head_points.push_back(P3D_NOSE);
+    head_points.push_back(P3D_STOMMION);
+
+    std::vector<Point2f> detected_points;
+
+    detected_points.push_back(coordsOf(face_idx, SELLION));
+    detected_points.push_back(coordsOf(face_idx, RIGHT_EYE));
+    detected_points.push_back(coordsOf(face_idx, LEFT_EYE));
+    detected_points.push_back(coordsOf(face_idx, RIGHT_SIDE));
+    detected_points.push_back(coordsOf(face_idx, LEFT_SIDE));
+    detected_points.push_back(coordsOf(face_idx, MENTON));
+    detected_points.push_back(coordsOf(face_idx, NOSE));
+
     auto stomion = (coordsOf(face_idx, MOUTH_CENTER_TOP) + coordsOf(face_idx, MOUTH_CENTER_BOTTOM)) * 0.5;
+    detected_points.push_back(stomion);
 
-    // head dimensions (in pixels!)
-    float width = norm(right - left);
-    float height = norm(sellion - stomion);
+    Mat rvec, tvec;
 
-#ifdef HEAD_POSE_ESTIMATION_DEBUG
-    line(_debug, right, left, Scalar(0,255,255), 1, CV_AA);
-    line(_debug, sellion, stomion, Scalar(0,255,255), 1, CV_AA);
-    putText(_debug, to_string(width), (left + right) * .5, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,0));
-    putText(_debug, to_string(height), (sellion + stomion) * .5, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,255,0));
-#endif
+    // Find the 3D pose of our head
+    solvePnP(head_points, detected_points,
+            projection, noArray(),
+            rvec, tvec, false,
+            cv::ITERATIVE);
 
-    // compute the head's distance in mm as the max of a distance computed with the
-    // head breadth and one computed with the face height We take the max as an
-    // easy way to compensate for either pitch or yaw rotations
-    auto head_distance = max(BITRAGION_BREADTH * focalLength / width,
-                             DIST_SELLION_TO_STOMION * focalLength / height);
+    Matx33d rotation;
+    Rodrigues(rvec, rotation);
 
-
-    Point2f width_heigth_intersection;
-    intersection(right, left, sellion, stomion, width_heigth_intersection);
-#ifdef HEAD_POSE_ESTIMATION_DEBUG
-    circle(_debug, width_heigth_intersection,2, Scalar(0,0,255));
-#endif
-
-
-    // yaw
-    float width_right = norm(right - width_heigth_intersection); 
-    float width_left = norm(left - width_heigth_intersection); 
-    auto east_west = (width_right - width_left) / width; // -1<score<1
-    auto yaw = M_PI/3 * east_west + M_PI;
-
-    // pitch
-    auto south_north = norm(stomion - width_heigth_intersection) / height;
-
-    // normalize: 0.9 is the 'south_north' ratio when facing the camera
-    // then, on my face, the ratio value goes from ~0.4 to ~1.4
-    south_north = -std::min(1., std::max(-1.,(south_north - 0.9) / 0.5));
-    auto pitch = M_PI/4 * south_north;
-
-    pose.x = (width_heigth_intersection.x - opticalCenterX) * head_distance / focalLength;
-    pose.y = (width_heigth_intersection.y - opticalCenterY) * head_distance / focalLength;
-    pose.z = head_distance;
-    pose.pitch = pitch;
-    pose.yaw = yaw;
+    pose.x = tvec.at<double>(0,0) / 1000; // in meters
+    pose.y = tvec.at<double>(0,1) / 1000; // in meters
+    pose.z = tvec.at<double>(0,2) / 1000; // in meters
+    pose.rotation = rotation;
 
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
-    putText(_debug, "(" + to_string(int(pose.x/10)) + "cm, " + to_string(int(pose.y/10)) + "cm, " + to_string(int(pose.z/10)) + "cm)", width_heigth_intersection, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255),2);
-    putText(_debug, "yaw: " + to_string(int(pose.yaw * 180/M_PI)) + "deg, pitch: " + to_string(int(pose.pitch * 180/M_PI)) + "deg", width_heigth_intersection + Point2f(0,20), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255),2);
-#endif
 
+    std::vector<Point2f> reprojected_points;
+
+    projectPoints(head_points, rvec, tvec, projection, noArray(), reprojected_points);
+
+    for (auto point : reprojected_points) {
+        circle(_debug, point,2, Scalar(0,255,255),2);
+    }
+
+    std::vector<Point3f> axes;
+    axes.push_back(Point3f(0,0,0));
+    axes.push_back(Point3f(50,0,0));
+    axes.push_back(Point3f(0,50,0));
+    axes.push_back(Point3f(0,0,50));
+    std::vector<Point2f> projected_axes;
+
+    projectPoints(axes, rvec, tvec, projection, noArray(), projected_axes);
+
+    line(_debug, projected_axes[0], projected_axes[3], Scalar(255,0,0),2,CV_AA);
+    line(_debug, projected_axes[0], projected_axes[2], Scalar(0,255,0),2,CV_AA);
+    line(_debug, projected_axes[0], projected_axes[1], Scalar(0,0,255),2,CV_AA);
+
+    putText(_debug, "(" + to_string(int(pose.x * 100)) + "cm, " + to_string(int(pose.y * 100)) + "cm, " + to_string(int(pose.z * 100)) + "cm)", coordsOf(face_idx, SELLION), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255),2);
+
+    //putText(_debug, "yaw: " + to_string(int(pose.yaw * 180/M_PI)) + "deg, pitch: " + to_string(int(pose.pitch * 180/M_PI)) + "deg", width_heigth_intersection + Point2f(0,20), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255),2);
+
+#endif
 
     return pose;
 }
