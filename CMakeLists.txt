@@ -58,13 +58,13 @@ if(WITH_ROS)
         message(FATAL_ERROR "OpenCV2 is currently required to build the ROS nodes!")
     endif()
 
-    add_executable(expected_focus src/expected_focus.cpp)
-    target_link_libraries(expected_focus ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+    add_executable(estimate_focus src/estimate_focus.cpp)
+    target_link_libraries(estimate_focus ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
     add_executable(estimate src/head_pose_estimation_ros.cpp src/ros_head_pose_estimator.cpp)
     target_link_libraries(estimate head_pose_estimation ${catkin_LIBRARIES})
 
-    install(TARGETS expected_focus head_pose_estimation estimate
+    install(TARGETS estimate_focus head_pose_estimation estimate
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
