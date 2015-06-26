@@ -24,11 +24,11 @@ int main(int argc, char **argv)
     // Configure the video capture
     // ===========================
 
-    VideoCapture video_in(1);
+    VideoCapture video_in(2);
 
     // settings for the Logitech c920
-    video_in.set(CAP_PROP_FRAME_WIDTH, 640);
-    video_in.set(CAP_PROP_FRAME_HEIGHT, 360);
+    video_in.set(CV_CAP_PROP_FRAME_WIDTH, 640);
+    video_in.set(CV_CAP_PROP_FRAME_HEIGHT, 360);
 
     estimator.focalLength = 455;
     estimator.opticalCenterX = 313;
@@ -47,8 +47,8 @@ int main(int argc, char **argv)
 
         for(auto pose : estimator.poses()) {
 
-        cout << "Head pose: (" << pose.x << ", " << pose.y << ", " << pose.z << ")";
-        cout << ", yaw: " << pose.yaw * 180 / M_PI << "deg, pitch: " << pose.pitch * 180 / M_PI << endl;
+        cout << "Head pose: (" << pose.x << ", " << pose.y << ", " << pose.z << ")" << endl;
+        //cout << ", rx: " << pose.rx * 180 / M_PI << "deg, ry: " << pose.ry * 180 / M_PI << "deg, rz: " << pose.rz * 180 / M_PI << "deg" << endl;
 
         }
 
