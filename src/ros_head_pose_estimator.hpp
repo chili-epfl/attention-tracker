@@ -8,6 +8,7 @@
 
 // ROS
 #include <ros/ros.h>
+#include <std_msgs/Char.h>
 #include <tf/transform_broadcaster.h>
 #include <image_transport/image_transport.h>
 
@@ -32,6 +33,8 @@ private:
     image_transport::ImageTransport it;
     image_transport::CameraSubscriber sub;
     image_transport::Publisher pub;
+
+    ros::Publisher nb_detected_faces_pub;
 
     tf::TransformBroadcaster br;
     tf::Transform transform;

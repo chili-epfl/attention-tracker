@@ -18,6 +18,8 @@ HeadPoseEstimator::HeadPoseEstimator(ros::NodeHandle& rosNode,
 {
     sub = it.subscribeCamera("image", 1, &HeadPoseEstimator::detectFaces, this);
 
+    nb_detected_faces_pub = rosNode.advertise<std_msgs::Char>("nb_detected_faces", 1);
+
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
     pub = it.advertise("attention_tracker/faces/image",1);
 #endif
@@ -58,6 +60,8 @@ void HeadPoseEstimator::detectFaces(const sensor_msgs::ImageConstPtr& msg,
     auto poses = estimator.poses();
     ROS_INFO_STREAM(poses.size() << " faces detected.");
 
+    nb_detected_faces_pub.publish(poses.size());
+
     for(size_t face_idx = 0; face_idx < poses.size(); ++face_idx) {
 
         auto trans = poses[face_idx];
@@ -67,10 +71,13 @@ void HeadPoseEstimator::detectFaces(const sensor_msgs::ImageConstPtr& msg,
         // Frame orientation of the camera follows the classical camera
         // convention (Z forward)
 
-        ROS_INFO_STREAM(trans);
+        auto z = -trans(2,3);
+
+        if (z < 0) continue; // the head can not be *behind* the camera!
+
         face_pose.setOrigin( tf::Vector3( trans(0,3),
                                           trans(1,3),
-                                          -trans(2,3)) );
+                                          z) );
 
         tf::Quaternion qrot;
         tf::Matrix3x3 mrot(
