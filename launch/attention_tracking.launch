@@ -24,7 +24,7 @@
   <node name="base_footprint_transform" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /base_footprint 100"/>
   <node name="robot_transform" pkg="tf" type="static_transform_publisher" args="0 0 0.5 0 0 0 /base_footprint /robot_head 100"/>
 
-  <!--<node pkg="attention_tracker" type="estimate_focus" name="estimate_focus" />-->
+  <node pkg="attention_tracker" type="estimate_focus" name="estimate_focus" />
 
   <node pkg="attention_tracker" type="estimate" name="head_pose_estimation">
     <param name="face_model" value="$(find attention_tracker)/shape_predictor_68_face_landmarks.dat" />
