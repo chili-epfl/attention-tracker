@@ -47,8 +47,7 @@ int main(int argc, char **argv)
 
         for(auto pose : estimator.poses()) {
 
-        cout << "Head pose: (" << pose.x << ", " << pose.y << ", " << pose.z << ")" << endl;
-        //cout << ", rx: " << pose.rx * 180 / M_PI << "deg, ry: " << pose.ry * 180 / M_PI << "deg, rz: " << pose.rz * 180 / M_PI << "deg" << endl;
+        cout << "Head pose: (" << pose(0,3) << ", " << pose(1,3) << ", " << pose(2,3) << ")" << endl;
 
         }
 

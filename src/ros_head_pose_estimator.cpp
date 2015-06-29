@@ -60,27 +60,31 @@ void HeadPoseEstimator::detectFaces(const sensor_msgs::ImageConstPtr& msg,
 
     for(size_t face_idx = 0; face_idx < poses.size(); ++face_idx) {
 
-        auto pose = poses[face_idx];
+        auto trans = poses[face_idx];
 
-        tf::StampedTransform face_pose;
-
-        face_pose.frame_id_ = cameramodel.tfFrame();
-        face_pose.child_frame_id_ = "face_" + to_string(face_idx);
-        face_pose.stamp_ = ros::Time::now() + ros::Duration(TRANSFORM_FUTURE_DATING);
-
+        tf::Transform face_pose;
+        
         // Frame orientation of the camera follows the classical camera
         // convention (Z forward)
-        tf::Matrix3x3 rotation(pose.rotation(0,0), pose.rotation(0,1), pose.rotation(0,2),
-                               pose.rotation(1,0), pose.rotation(1,1), pose.rotation(1,2),
-                               pose.rotation(2,0), pose.rotation(2,1), pose.rotation(2,2));
 
-        rotation = rotation.transpose();
-        tf::Quaternion q;
-        rotation.getRotation(q);
-        face_pose.setRotation(q);
-        face_pose.setOrigin(tf::Vector3(-pose.x, -pose.y, -pose.z));
+        ROS_INFO_STREAM(trans);
+        face_pose.setOrigin( tf::Vector3( trans(0,3),
+                                          trans(1,3),
+                                          -trans(2,3)) );
 
-        br.sendTransform(face_pose);
+        tf::Quaternion qrot;
+        tf::Matrix3x3 mrot(
+                trans(0,0), trans(0,1), trans(0,2),
+                trans(1,0), trans(1,1), trans(1,2),
+                trans(2,0), trans(2,1), trans(2,2));
+        mrot.getRotation(qrot);
+        face_pose.setRotation(qrot);
+
+        br.sendTransform(
+                tf::StampedTransform(face_pose, 
+                                     ros::Time::now() + ros::Duration(TRANSFORM_FUTURE_DATING), 
+                                     cameramodel.tfFrame(),
+                                     "face_" + to_string(face_idx)));
 
     }
 

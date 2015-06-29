@@ -104,7 +104,6 @@ void HeadPoseEstimation::update(cv::Mat image)
 
 head_pose HeadPoseEstimation::pose(size_t face_idx)
 {
-    head_pose pose;
 
     cv::Mat projectionMat = cv::Mat::zeros(3,3,CV_32F);
     cv::Matx33f projection = projectionMat;
@@ -149,10 +148,13 @@ head_pose HeadPoseEstimation::pose(size_t face_idx)
     Matx33d rotation;
     Rodrigues(rvec, rotation);
 
-    pose.x = tvec.at<double>(0,0) / 1000; // in meters
-    pose.y = tvec.at<double>(0,1) / 1000; // in meters
-    pose.z = tvec.at<double>(0,2) / 1000; // in meters
-    pose.rotation = rotation;
+
+    head_pose pose = {
+        rotation(0,0),    rotation(0,1),    rotation(0,2),    tvec.at<double>(0)/1000,
+        rotation(1,0),    rotation(1,1),    rotation(1,2),    tvec.at<double>(1)/1000,
+        rotation(2,0),    rotation(2,1),    rotation(2,2),    tvec.at<double>(2)/1000,
+                    0,                0,                0,                     1
+    };
 
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
 
@@ -177,9 +179,8 @@ head_pose HeadPoseEstimation::pose(size_t face_idx)
     line(_debug, projected_axes[0], projected_axes[2], Scalar(0,255,0),2,CV_AA);
     line(_debug, projected_axes[0], projected_axes[1], Scalar(0,0,255),2,CV_AA);
 
-    putText(_debug, "(" + to_string(int(pose.x * 100)) + "cm, " + to_string(int(pose.y * 100)) + "cm, " + to_string(int(pose.z * 100)) + "cm)", coordsOf(face_idx, SELLION), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255),2);
+    putText(_debug, "(" + to_string(int(pose(0,3) * 100)) + "cm, " + to_string(int(pose(1,3) * 100)) + "cm, " + to_string(int(pose(2,3) * 100)) + "cm)", coordsOf(face_idx, SELLION), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255),2);
 
-    //putText(_debug, "yaw: " + to_string(int(pose.yaw * 180/M_PI)) + "deg, pitch: " + to_string(int(pose.pitch * 180/M_PI)) + "deg", width_heigth_intersection + Point2f(0,20), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255),2);
 
 #endif
 

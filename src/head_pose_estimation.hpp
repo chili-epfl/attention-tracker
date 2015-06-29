@@ -10,20 +10,17 @@
 #include <string>
 
 // Anthropometric for male adult
-// Values taken from https://en.wikipedia.org/wiki/Human_head
-static const float DIST_SELLION_TO_STOMION= 199 - 124; //mm
-static const float BITRAGION_BREADTH= 155; //mm
-
 // Relative position of various facial feature relative to sellion
-// X poits forward
+// Values taken from https://en.wikipedia.org/wiki/Human_head
+// X points forward
 const static cv::Point3f P3D_SELLION(0., 0.,0.);
 const static cv::Point3f P3D_RIGHT_EYE(-20., -65.5,-5.);
 const static cv::Point3f P3D_LEFT_EYE(-20., 65.5,-5.);
 const static cv::Point3f P3D_RIGHT_EAR(-100., -77.5,-6.);
 const static cv::Point3f P3D_LEFT_EAR(-100., 77.5,-6.);
-const static cv::Point3f P3D_MENTON(0., 0.,-133.0);
 const static cv::Point3f P3D_NOSE(21.0, 0., -48.0);
 const static cv::Point3f P3D_STOMMION(10.0, 0., -75.0);
+const static cv::Point3f P3D_MENTON(0., 0.,-133.0);
 
 
 
@@ -49,10 +46,7 @@ enum FACIAL_FEATURE {
 };
 
 
-struct head_pose {
-    float x, y, z; // in meters
-    cv::Matx33d rotation;
-};
+typedef cv::Matx44d head_pose;
 
 class HeadPoseEstimation {
 

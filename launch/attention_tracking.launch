@@ -16,8 +16,10 @@
 
 
   <node name="tablet_transform" pkg="tf" type="static_transform_publisher" args="0.3 0 0 0 0 0 /base_footprint /tablet 100"/>
+  <node name="selection_tablet_transform" pkg="tf" type="static_transform_publisher" args="0.3 -0.3 0 0 0 0 /base_footprint /selection_tablet 100"/>
   <node name="experimenter_transform" pkg="tf" type="static_transform_publisher" args="0.5 -1 0.7 0 0 0 /base_footprint /experimenter 100"/>
-  <node name="camera_transform" pkg="tf" type="static_transform_publisher" args="0.1 0 0 -1.68 0 -1 /base_footprint $(arg head_tracking_frame) 100"/>
+  <node name="observers_transform" pkg="tf" type="static_transform_publisher" args="-2.7 1 0.7 0 0 0 /base_footprint /observer 100"/>
+  <node name="camera_transform" pkg="tf" type="static_transform_publisher" args="0.1 0 0 1.57 0 1. /base_footprint $(arg head_tracking_frame) 100"/>
 
   <node name="base_footprint_transform" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /base_footprint 100"/>
   <node name="robot_transform" pkg="tf" type="static_transform_publisher" args="0 0 0.5 0 0 0 /base_footprint /robot_head 100"/>
