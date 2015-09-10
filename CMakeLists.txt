@@ -6,9 +6,9 @@ add_definitions(-std=c++11)
 set(DLIB_PATH "" CACHE PATH "Path to DLIB")
 include(${DLIB_PATH}/dlib/cmake)
 
-option(DEBUG "Enable debug visualizations" OFF)
-option(WITH_TESTS "Compile sample test application" OFF)
-option(WITH_ROS "Build ROS nodes -- Requires OpenCV2!" ON)
+option(DEBUG "Enable debug visualizations" ON)
+option(WITH_TESTS "Compile sample test application" ON)
+option(WITH_ROS "Build ROS nodes -- Requires OpenCV2!" OFF)
 
 if(WITH_ROS)
 

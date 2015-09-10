@@ -60,15 +60,12 @@ void HeadPoseEstimation::update(cv::Mat image)
     
     _debug = image.clone();
 
-    auto color = Scalar(0,255,128);
+    auto color = Scalar(0,128,128);
 
     for (unsigned long i = 0; i < shapes.size(); ++i)
     {
         const full_object_detection& d = shapes[i];
 
-        for (auto i = 0; i < 68 ; i++) {
-            putText(_debug, to_string(i), toCv(d.part(i)), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,0));
-        }
         for (unsigned long i = 1; i <= 16; ++i)
             line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, CV_AA);
 
@@ -98,6 +95,10 @@ void HeadPoseEstimation::update(cv::Mat image)
         for (unsigned long i = 61; i <= 67; ++i)
             line(_debug, toCv(d.part(i)), toCv(d.part(i-1)), color, 2, CV_AA);
         line(_debug, toCv(d.part(60)), toCv(d.part(67)), color, 2, CV_AA);
+
+        for (auto i = 0; i < 68 ; i++) {
+            putText(_debug, to_string(i), toCv(d.part(i)), FONT_HERSHEY_DUPLEX, 0.6, Scalar(255,255,255));
+        }
     }
 #endif
 }
