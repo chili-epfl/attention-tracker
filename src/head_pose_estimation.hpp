@@ -3,6 +3,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <dlib/opencv.h>
+#include <dlib/image_processing.h>
 #include <dlib/image_processing/frontal_face_detector.h>
 
 #include <vector>
