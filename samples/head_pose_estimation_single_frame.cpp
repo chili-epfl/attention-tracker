@@ -30,7 +30,11 @@ int main(int argc, char **argv)
     auto estimator = HeadPoseEstimation(argv[1]);
 
     cout << "Estimating head pose on " << argv[2] << endl;
+#ifdef OPENCV3
+    Mat img = imread(argv[2],IMREAD_COLOR);
+#else
     Mat img = imread(argv[2],CV_LOAD_IMAGE_COLOR);
+#endif
 
     estimator.focalLength = 500;
 

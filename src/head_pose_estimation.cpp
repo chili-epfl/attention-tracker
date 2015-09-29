@@ -146,7 +146,11 @@ head_pose HeadPoseEstimation::pose(size_t face_idx) const
     solvePnP(head_points, detected_points,
             projection, noArray(),
             rvec, tvec, false,
+#ifdef OPENCV3
+            cv::SOLVEPNP_ITERATIVE);
+#else
             cv::ITERATIVE);
+#endif
 
     Matx33d rotation;
     Rodrigues(rvec, rotation);
