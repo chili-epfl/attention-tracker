@@ -33,8 +33,10 @@ HeadPoseEstimation::HeadPoseEstimation(const string& face_detection_model, float
 }
 
 
-void HeadPoseEstimation::update(cv::Mat image)
+void HeadPoseEstimation::update(cv::InputArray _image)
 {
+
+    Mat image = _image.getMat();
 
     if (opticalCenterX == -1) // not initialized yet
     {
@@ -103,7 +105,7 @@ void HeadPoseEstimation::update(cv::Mat image)
 #endif
 }
 
-head_pose HeadPoseEstimation::pose(size_t face_idx)
+head_pose HeadPoseEstimation::pose(size_t face_idx) const
 {
 
     cv::Mat projectionMat = cv::Mat::zeros(3,3,CV_32F);
@@ -188,7 +190,7 @@ head_pose HeadPoseEstimation::pose(size_t face_idx)
     return pose;
 }
 
-std::vector<head_pose> HeadPoseEstimation::poses() {
+std::vector<head_pose> HeadPoseEstimation::poses() const {
 
     std::vector<head_pose> res;
 
@@ -200,7 +202,7 @@ std::vector<head_pose> HeadPoseEstimation::poses() {
 
 }
 
-Point2f HeadPoseEstimation::coordsOf(size_t face_idx, FACIAL_FEATURE feature)
+Point2f HeadPoseEstimation::coordsOf(size_t face_idx, FACIAL_FEATURE feature) const
 {
     return toCv(shapes[face_idx].part(feature));
 }
@@ -209,7 +211,7 @@ Point2f HeadPoseEstimation::coordsOf(size_t face_idx, FACIAL_FEATURE feature)
 // The lines are defined by (o1, p1) and (o2, p2).
 // taken from: http://stackoverflow.com/a/7448287/828379
 bool HeadPoseEstimation::intersection(Point2f o1, Point2f p1, Point2f o2, Point2f p2,
-                                      Point2f &r)
+                                      Point2f &r) const
 {
     Point2f x = o2 - o1;
     Point2f d1 = p1 - o1;

@@ -55,32 +55,18 @@ public:
 
     HeadPoseEstimation(const std::string& face_detection_model = "shape_predictor_68_face_landmarks.dat", float focalLength=455.);
 
-    void update(cv::Mat image);
+    void update(cv::InputArray image);
 
-    bool smileDetector(size_t face_idx);
+    head_pose pose(size_t face_idx) const;
 
-    float novelty(std::vector<bool> lookAt,
-                std::vector<dlib::rectangle> faces, 
-                float mu, float eps, float threshold);
-
-    head_pose pose(size_t face_idx);
-
-    std::vector<head_pose> poses();
-
-    float quantityOfMovement(cv::Mat rgbFrames, 
-                            cv::Mat grayFrames, 
-                            cv::Mat prevGrayFrame,
-                            cv::Mat opticalFlow, 
-                            std::vector<cv::Point2f> &points1, 
-                            std::vector<cv::Point2f> &points2, 
-                            bool needToInit);
+    std::vector<head_pose> poses() const;
 
     float focalLength;
     float opticalCenterX;
     float opticalCenterY;
 
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
-    cv::Mat _debug;
+    mutable cv::Mat _debug;
 #endif
 
 private:
@@ -97,14 +83,14 @@ private:
 
     /** Return the point corresponding to the dictionary marker.
     */
-    cv::Point2f coordsOf(size_t face_idx, FACIAL_FEATURE feature);
+    cv::Point2f coordsOf(size_t face_idx, FACIAL_FEATURE feature) const;
 
     /** Returns true if the lines intersect (and set r to the intersection
      *  coordinates), false otherwise.
      */
     bool intersection(cv::Point2f o1, cv::Point2f p1,
                       cv::Point2f o2, cv::Point2f p2,
-                      cv::Point2f &r);
+                      cv::Point2f &r) const;
 
 };
 
