@@ -42,11 +42,14 @@ int main(int argc, char **argv)
     while(true) {
         video_in >> frame;
 
+        auto t_start = getTickCount();
         estimator.update(frame);
 
         for(auto pose : estimator.poses()) {
 
         cout << "Head pose: (" << pose(0,3) << ", " << pose(1,3) << ", " << pose(2,3) << ")" << endl;
+        auto t_end = getTickCount();
+        cout << "Processing time for this frame: " << (t_end-t_start) / getTickFrequency() * 1000. << "ms" << endl;
 
         }
 
