@@ -33,7 +33,11 @@ if(WITH_ROS)
     )
 endif()
 
-find_package(OpenCV COMPONENTS core imgproc calib3d highgui REQUIRED)
+if(DEBUG)
+    find_package(OpenCV COMPONENTS core imgproc calib3d highgui REQUIRED)
+else()
+    find_package(OpenCV COMPONENTS core imgproc calib3d REQUIRED)
+endif()
 
 message(STATUS "OpenCV version: ${OpenCV_VERSION}")
 if(${OpenCV_VERSION} VERSION_GREATER 2.9.0)
@@ -80,13 +84,14 @@ endif()
 
 if(WITH_TESTS)
     if(OPENCV3)
-        find_package(OpenCV COMPONENTS core imgproc calib3d highgui videoio REQUIRED)
+        if (DEBUG)
+            find_package(OpenCV COMPONENTS core imgproc calib3d imgcodecs videoio REQUIRED)
+        else()
+            find_package(OpenCV COMPONENTS core imgproc calib3d highgui imgcodecs videoio REQUIRED)
+        endif()
     else()
         find_package(OpenCV COMPONENTS core imgproc calib3d highgui REQUIRED)
     endif()
-
-    # visualizations need to be enabled
-    add_definitions(-DHEAD_POSE_ESTIMATION_DEBUG)
 
     add_executable(head_pose_test samples/head_pose_estimation_test.cpp)
     target_link_libraries(head_pose_test head_pose_estimation ${OpenCV_LIBRARIES})
