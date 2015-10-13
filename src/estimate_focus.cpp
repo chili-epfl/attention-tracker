@@ -13,7 +13,7 @@ using namespace std;
 
 static const string HUMAN_FRAME_PREFIX = "face_";
 
-static const double FOV = 20. / 180 * M_PI; // radians
+static const double FOV = 30. / 180 * M_PI; // radians
 static const float RANGE = 3; //m
 
 std::vector<std_msgs::ColorRGBA> colors;
@@ -110,6 +110,7 @@ int main( int argc, char** argv )
 
 
     // Prepare a range sensor msg to represent the fields of view
+    // (cone for visualization)
     sensor_msgs::Range fov;
 
     fov.radiation_type = sensor_msgs::Range::INFRARED;
@@ -117,7 +118,6 @@ int main( int argc, char** argv )
     fov.min_range = 0;
     fov.max_range = 10;
     fov.range = RANGE;
-
 
   ROS_INFO("Waiting until a face becomes visible...");
   while (!listener.waitForTransform("base_footprint", "face_0", ros::Time::now(), ros::Duration(5.0))) {
@@ -131,7 +131,7 @@ int main( int argc, char** argv )
   {
     
     // Publish the marker
-    while (marker_pub.getNumSubscribers() < 1 && fov_pub.getNumSubscribers() < 1)
+    /*while (marker_pub.getNumSubscribers() < 1 && fov_pub.getNumSubscribers() < 1)
     {
       if (!ros::ok())
       {
@@ -139,11 +139,10 @@ int main( int argc, char** argv )
       }
       ROS_WARN_ONCE("Please create a subscriber to the marker or field of view");
       sleep(1);
-    }
+    }*/
 
     frames.clear();
     listener.getFrameStrings(frames);
-
     int nb_faces = 0;
 
     for(auto frame : frames) {
@@ -160,8 +159,10 @@ int main( int argc, char** argv )
                     if(isInFieldOfView(listener, monitored_frames[i], frame)) {
                         ROS_DEBUG_STREAM(monitored_frames[i] << " is in the field of view of " << frame);
                         marker_pub.publish(makeMarker(i, monitored_frames[i], colors[i]));
-                        if (!ss.str().empty()) ss << " ";
+                        // create new marker with special color for the observed frame ? 
+                        if (ss.str().empty()) ss << " ";
                         ss << monitored_frames[i];
+                        //ss is the frame that the observer is looking
                     }
                 }
                 frames_in_fov_pub.publish(ss.str());
@@ -180,7 +181,11 @@ int main( int argc, char** argv )
 
         fov.header.stamp = ros::Time::now();
         fov.header.frame_id = "face_0";
-        fov_pub.publish(fov); 
+        fov_pub.publish(fov);
+        
+        //stringstream ss;
+        //ss << "test";
+        //frames_in_fov_pub.publish(ss.str());
 
     }
     r.sleep();
