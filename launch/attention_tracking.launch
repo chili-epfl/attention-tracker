@@ -2,7 +2,7 @@
 
   <arg name="head_tracking_frame" default="head_tracking_camera"/>
 
-  <arg name="device" default="/dev/video2"/>
+  <arg name="device" default="/dev/video1"/>
   <arg name="calibration" default="package://attention_tracker/logitech-c920_640x360.ini"/>
 
   <node name="webcam_source" pkg="gscam" type="gscam" output="screen">
@@ -17,7 +17,7 @@
 
   <node name="tablet_transform" pkg="tf" type="static_transform_publisher" args="0.3 0 0 0 0 0 /base_footprint /tablet 100"/>
   <node name="selection_tablet_transform" pkg="tf" type="static_transform_publisher" args="0.3 -0.3 0 0 0 0 /base_footprint /selection_tablet 100"/>
-  <node name="experimenter_transform" pkg="tf" type="static_transform_publisher" args="0.5 -1 0.7 0 0 0 /base_footprint /experimenter 100"/>
+  <node name="experimenter_transform" pkg="tf" type="static_transform_publisher" args="0.2 -0.6 0.6 0 0 0 /base_footprint /experimenter 100"/>
   <node name="observers_transform" pkg="tf" type="static_transform_publisher" args="-2.7 1 0.7 0 0 0 /base_footprint /observer 100"/>
   <node name="camera_transform" pkg="tf" type="static_transform_publisher" args="0.1 0 0 1.57 0 1. /base_footprint $(arg head_tracking_frame) 100"/>
 
@@ -31,4 +31,5 @@
     <remap from="/image" to="/camera/image_raw"/>
   </node>
 
+  <node pkg="attention_tracker" type="withmeness.py" name="withmeness" />
 </launch>

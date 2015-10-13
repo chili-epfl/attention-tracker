@@ -70,6 +70,10 @@ if(WITH_ROS)
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
     )
 
+    install(PROGRAMS src/withmeness.py
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+    )
+
     install(FILES
         launch/attention_tracking.launch
         calib/logitech-c920_640x360.ini
