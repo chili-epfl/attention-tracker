@@ -160,7 +160,7 @@ int main( int argc, char** argv )
                         ROS_DEBUG_STREAM(monitored_frames[i] << " is in the field of view of " << frame);
                         marker_pub.publish(makeMarker(i, monitored_frames[i], colors[i]));
                         // create new marker with special color for the observed frame ? 
-                        if (ss.str().empty()) ss << " ";
+                        if (ss.str().empty()) ss << "_";
                         ss << monitored_frames[i];
                         //ss is the frame that the observer is looking
                     }
