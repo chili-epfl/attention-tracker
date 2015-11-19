@@ -4,11 +4,12 @@
 import sys
 import time
 import rospy
+import json
 from std_msgs.msg import String, Empty, Float64
 
 pub_withmeness = rospy.Publisher('withmeness_topic', Float64, queue_size=1)
 
-
+"""
 task_targets = {
 "WAITING_FOR_WORD": {"_/selection_tablet","_/experimentator"},
 "RESPONDING_TO_NEW_WORD": {"_/robot_head","_/tablet","_/experimentator"},
@@ -20,11 +21,13 @@ task_targets = {
 "WAITING_FOR_TABLET_TO_CONNECT": {"_/tablet","_/experimentator","_/robot_head"},
 "RESPONDING_TO_DEMONSTRATION_FULL_WORD": {"_/robot_head","_/tablet","_/experimentator"},
 "RESPONDING_TO_DEMONSTRATION": {"_/robot_head","_/tablet","_/experimentator"},
- }
+ }"""
+
+
 
 current_task = "WAITING_FOR_WORD"
 current_target = "_"
-withmeness = 0.5
+value = 0.5
 mu = 0.1
 
 def onChangeTask(msg):
@@ -37,9 +40,14 @@ def onChangeTarget(msg):
 
 if __name__=='__main__':
 
-    global withmeness
+    global withmeness_value
 
     rospy.init_node("withmeness")
+
+    test = rospy.search_param("targets")
+    target_list = rospy.get_param(test)
+    with open(target_list) as target_list_json:
+        task_targets = json.load(target_list_json)
 
     while(True):
         # get current task:
@@ -51,13 +59,13 @@ if __name__=='__main__':
         # compute EMA of online-with_me_ness:
         if current_task in task_targets:
             if current_target in task_targets[current_task]:
-                withmeness = (1-mu)*withmeness + mu
+                value = (1-mu)*value + mu
             else:
                 if current_target!="" and current_target!="_":
-                    withmeness = (1-mu)*withmeness
+                    value = (1-mu)*value
 
         msg = Float64()
-        msg.data = withmeness
+        msg.data = value
         pub_withmeness.publish(msg)
 
         rospy.sleep(1.0)

@@ -78,6 +78,7 @@ if(WITH_ROS)
         launch/attention_tracking.launch
         calib/logitech-c920_640x360.ini
         share/shape_predictor_68_face_landmarks.dat
+        share/targets.json
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
     )
 endif()
