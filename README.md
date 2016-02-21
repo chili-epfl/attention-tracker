@@ -26,8 +26,10 @@ support for other operating systems!
 
 ### Pre-requisites
 
-You need to [download](http://dlib.net/) and extract ``Dlib`` somewhere. This
+Dlib: You need to [download](http://dlib.net/) and extract ``Dlib`` somewhere. This
 application has been tested with ``dlib-18.16``.
+
+OpenCV: You need to install [OpenCV](http://opencv.org/). If you're using Ubuntu, you could use this [script](https://github.com/milq/scripts-ubuntu-debian/blob/master/install-opencv.sh).
 
 ### Installation
 
@@ -42,8 +44,13 @@ $ make
 Note that the first time you compile the project, ``dlib`` will compile as well.
 It takes a few minutes. This won't happen the next times.
 
-Run ``head_pose_test ../share/shape_predictor_68_face_landmarks.dat`` to test
-the library. You should get something very similar to the picture above.
+To test the library, run:
+
+```text
+./head_pose_test ../share/shape_predictor_68_face_landmarks.dat
+```
+
+You should get something very similar to the picture above.
 
 Finally, to install the library:
 
