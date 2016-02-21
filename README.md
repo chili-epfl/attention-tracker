@@ -29,11 +29,6 @@ support for other operating systems!
 You need to [download](http://dlib.net/) and extract ``Dlib`` somewhere. This
 application has been tested with ``dlib-18.16``.
 
-**Important**: due to a bug in ``dlib``, you **must** manually modify ``dlib``'s
-``CMakeLists.txt`` before compiling: open it
-(``$DLIB_ROOT/dlib/CMakelists.txt``) and add ``add_definitions(-fPIC)`` near the
-top (around line 20).
-
 ### Installation
 
 The library uses a standard ``CMake`` workflow:

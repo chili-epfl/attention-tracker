@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(attention_tracker)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE True)
 add_definitions(-std=c++11)
 
 set(DLIB_PATH "" CACHE PATH "Path to DLIB")
