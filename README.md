@@ -29,7 +29,11 @@ support for other operating systems!
 Dlib: You need to [download](http://dlib.net/) and extract ``Dlib`` somewhere. This
 application has been tested with ``dlib-18.16``.
 
-OpenCV: You need to install [OpenCV](http://opencv.org/). If you're using Ubuntu, you could use this [script](https://github.com/milq/scripts-ubuntu-debian/blob/master/install-opencv.sh).
+OpenCV: You need to install [OpenCV](http://opencv.org/). If you're using Ubuntu, you could run:
+
+```text
+sudo apt-get install libopencv-dev
+```
 
 ### Installation
 
