@@ -4,7 +4,11 @@
 #include "head_pose_estimation.hpp"
 
 // opencv2
+#ifdef OPENCV3
+#include <opencv2/core.hpp>
+#else
 #include <opencv2/core/core.hpp>
+#endif
 
 // ROS
 #include <ros/ros.h>
@@ -12,9 +16,6 @@
 #include <tf/transform_broadcaster.h>
 #include <image_transport/image_transport.h>
 
-#ifdef OPENCV3
-#define CV_INTER_LINEAR 1
-#endif
 #include <image_geometry/pinhole_camera_model.h>
 
 #include <cv_bridge/cv_bridge.h>
