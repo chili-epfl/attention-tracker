@@ -4,8 +4,11 @@ project(attention_tracker)
 set(CMAKE_POSITION_INDEPENDENT_CODE True)
 add_definitions(-std=c++11)
 
-set(DLIB_PATH "" CACHE PATH "Path to DLIB")
-include(${DLIB_PATH}/dlib/cmake)
+#set(DLIB_PATH "" CACHE PATH "Path to DLIB")
+#include(${DLIB_PATH}/dlib/cmake)
+
+# dlib Custom inserted:
+include(../dlib/cmake)
 
 option(DEBUG "Enable debug visualizations" ON)
 option(WITH_TESTS "Compile sample test application" ON)
@@ -52,7 +55,8 @@ if(DEBUG)
     add_definitions(-DHEAD_POSE_ESTIMATION_DEBUG)
 endif()
 
-add_library(head_pose_estimation SHARED src/head_pose_estimation.cpp)
+#add_library(head_pose_estimation SHARED src/head_pose_estimation.cpp)
+add_library(head_pose_estimation STATIC src/head_pose_estimation.cpp)
 target_link_libraries(head_pose_estimation dlib ${OpenCV_LIBRARIES})
 
 if(WITH_ROS)

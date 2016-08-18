@@ -49,7 +49,7 @@ void HeadPoseEstimation::update(cv::InputArray _image)
 
     current_image = cv_image<bgr_pixel>(image);
 
-    faces = detector(current_image);
+    faces = detector(current_image,_UPSAMPLE);
 
     // Find the pose of each face.
     shapes.clear();
