@@ -43,7 +43,8 @@ int main(int argc, char **argv)
         video_in >> frame;
 
         auto t_start = getTickCount();
-        estimator.update(frame);
+    	double subsample_detection_image = 0;
+        estimator.update(frame,subsample_detection_image);
 
         for(auto pose : estimator.poses()) {
 

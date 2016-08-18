@@ -48,7 +48,8 @@ int main(int argc, char **argv)
     auto nbfaces = 0;
 
     for(size_t i = 0; i < NB_TESTS; i++) {
-        estimator.update(img);
+    	double subsample_detection_image = 0;
+        estimator.update(img,subsample_detection_image);
     }
     auto t_detection = getTickCount();
 

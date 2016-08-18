@@ -33,7 +33,7 @@ HeadPoseEstimation::HeadPoseEstimation(const string& face_detection_model, float
 }
 
 
-void HeadPoseEstimation::update(cv::InputArray _image)
+void HeadPoseEstimation::update(cv::InputArray _image, double subsample_detection_frame)
 {
 
     Mat image = _image.getMat();
@@ -46,16 +46,32 @@ void HeadPoseEstimation::update(cv::InputArray _image)
         cerr << "Setting the optical center to (" << opticalCenterX << ", " << opticalCenterY << ")" << endl;
 #endif
     }
-
-    current_image = cv_image<bgr_pixel>(image);
-
-    faces = detector(current_image,_UPSAMPLE);
-
-    // Find the pose of each face.
-    shapes.clear();
-    for (auto face : faces){
-        shapes.push_back(pose_model(current_image, face));
-    }
+	current_image = cv_image<bgr_pixel>(image);
+	shapes.clear();
+	// Perform subsampling, if the variable 'subsample_detection_frame' > 0. Subsampling is only
+	// performed on the detection frame.
+	if(subsample_detection_frame>0){
+		Mat image_subsample;
+		cv::resize(image,image_subsample, cv::Size(0,0), 1/subsample_detection_frame, 1/subsample_detection_frame);
+		dlib::cv_image<dlib::bgr_pixel> image_sub = cv_image<bgr_pixel>(image_subsample);
+		faces = detector(image_sub,_UPSAMPLE);
+		// Rescale the x an y axes of the locations of the faces
+		// TODO: Currently only for one face
+		int left, right, top, bottom;
+		left	= int(faces[0].left()*subsample_detection_frame);
+		top		= int(faces[0].top()*subsample_detection_frame);
+		right	= int(faces[0].right()*subsample_detection_frame);
+		bottom	= int(faces[0].bottom()*subsample_detection_frame);
+		dlib::rectangle face	= dlib::rectangle(left,top,right,bottom);
+		shapes.push_back(pose_model(current_image, face));
+	}
+	else{
+		faces = detector(current_image,_UPSAMPLE);
+		// Find the pose of each face.
+		for (auto face : faces){
+			shapes.push_back(pose_model(current_image, face));
+		}
+	}
 
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
     // Draws the contours of the face and face features onto the image

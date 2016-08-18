@@ -27,6 +27,7 @@ const static cv::Point3f P3D_MENTON(0., 0.,-133.0);
 
 static const int MAX_FEATURES_TO_TRACK=100;
 
+#define HEAD_POSE_ESTIMATION_DEBUG 1
 #define _UPSAMPLE 0 // << added because no upsampling should be performed.
 
 // Interesting facial features with their landmark index
@@ -57,7 +58,7 @@ public:
 
     HeadPoseEstimation(const std::string& face_detection_model = "shape_predictor_68_face_landmarks.dat", float focalLength=455.);
 
-    void update(cv::InputArray image);
+    void update(cv::InputArray image, double subsample_detection_frame);
 
     head_pose pose(size_t face_idx) const;
 
