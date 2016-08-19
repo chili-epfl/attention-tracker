@@ -55,22 +55,22 @@ void HeadPoseEstimation::update(cv::InputArray _image, double subsample_detectio
 		cv::resize(image,image_subsample, cv::Size(0,0), 1/subsample_detection_frame, 1/subsample_detection_frame);
 		dlib::cv_image<dlib::bgr_pixel> image_sub = cv_image<bgr_pixel>(image_subsample);
 		faces = detector(image_sub,_UPSAMPLE);
-		// Rescale the x an y axes of the locations of the faces
-		// TODO: Currently only for one face
-		int left, right, top, bottom;
-		left	= int(faces[0].left()*subsample_detection_frame);
-		top		= int(faces[0].top()*subsample_detection_frame);
-		right	= int(faces[0].right()*subsample_detection_frame);
-		bottom	= int(faces[0].bottom()*subsample_detection_frame);
-		dlib::rectangle face	= dlib::rectangle(left,top,right,bottom);
-		shapes.push_back(pose_model(current_image, face));
 	}
 	else{
 		faces = detector(current_image,_UPSAMPLE);
-		// Find the pose of each face.
-		for (auto face : faces){
-			shapes.push_back(pose_model(current_image, face));
+	}
+	for (auto face : faces){
+		if(subsample_detection_frame>0){
+			// Rescale the x an y axes of the locations of the faces
+			int left, right, top, bottom;
+			left	= int(face.left()*subsample_detection_frame);
+			top		= int(face.top()*subsample_detection_frame);
+			right	= int(face.right()*subsample_detection_frame);
+			bottom	= int(face.bottom()*subsample_detection_frame);
+			face	= dlib::rectangle(left,top,right,bottom);
 		}
+		// Find the pose of each face.
+		shapes.push_back(pose_model(current_image, face));
 	}
 
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
