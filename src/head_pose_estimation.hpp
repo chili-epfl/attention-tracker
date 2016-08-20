@@ -50,7 +50,11 @@ enum FACIAL_FEATURE {
 };
 
 
-typedef cv::Matx44d head_pose;
+typedef struct {
+	cv::Matx44d	transformation_matrix;
+	cv::Mat		tvec;
+	cv::Mat		rvec;
+} head_pose;
 
 class HeadPoseEstimation {
 

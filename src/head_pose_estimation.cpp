@@ -156,7 +156,7 @@ head_pose HeadPoseEstimation::pose(size_t face_idx) const
     auto stomion = (coordsOf(face_idx, MOUTH_CENTER_TOP) + coordsOf(face_idx, MOUTH_CENTER_BOTTOM)) * 0.5;
     detected_points.push_back(stomion);
 
-    Mat rvec, tvec;
+    cv::Mat rvec, tvec;
 
     // Find the 3D pose of our head
     solvePnP(head_points, detected_points,
@@ -167,12 +167,11 @@ head_pose HeadPoseEstimation::pose(size_t face_idx) const
 #else
             cv::ITERATIVE);
 #endif
-
     Matx33d rotation;
     Rodrigues(rvec, rotation);
 
 
-    head_pose pose = {
+    cv::Matx44d pose = {
         rotation(0,0),    rotation(0,1),    rotation(0,2),    tvec.at<double>(0)/1000,
         rotation(1,0),    rotation(1,1),    rotation(1,2),    tvec.at<double>(1)/1000,
         rotation(2,0),    rotation(2,1),    rotation(2,2),    tvec.at<double>(2)/1000,
@@ -206,8 +205,11 @@ head_pose HeadPoseEstimation::pose(size_t face_idx) const
 
 
 #endif
+	head_pose pose_head	=	{pose,	// transformation matrix
+							tvec,	// vector with translations
+							rvec};	// vector with rotations
 
-    return pose;
+    return pose_head;
 }
 
 std::vector<head_pose> HeadPoseEstimation::poses() const {

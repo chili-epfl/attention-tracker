@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 
         for(auto pose : estimator.poses()) {
 
-        cout << "Head pose: (" << pose(0,3) << ", " << pose(1,3) << ", " << pose(2,3) << ")" << endl;
+        cout << "Head pose: (" << pose.transformation_matrix(0,3) << ", " << pose.transformation_matrix(1,3) << ", " << pose.transformation_matrix(2,3) << ")" << endl;
         auto t_end = getTickCount();
         cout << "Processing time for this frame: " << (t_end-t_start) / getTickFrequency() * 1000. << "ms" << endl;
 
