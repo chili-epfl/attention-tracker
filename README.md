@@ -1,3 +1,7 @@
+
+⚠️️ **Attention**: This library is currently not maintained. Please use [the gazr fork](https://github.com/severin-lemaignan/gazr) instead. ⚠️️
+
+
 Attention Tracker
 =================
 
