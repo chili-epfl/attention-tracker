@@ -33,7 +33,7 @@ HeadPoseEstimation::HeadPoseEstimation(const string& face_detection_model, float
 }
 
 
-void HeadPoseEstimation::update(cv::InputArray _image)
+void HeadPoseEstimation::update(cv::InputArray _image, double subsample_detection_frame)
 {
 
     Mat image = _image.getMat();
@@ -46,16 +46,32 @@ void HeadPoseEstimation::update(cv::InputArray _image)
         cerr << "Setting the optical center to (" << opticalCenterX << ", " << opticalCenterY << ")" << endl;
 #endif
     }
-
-    current_image = cv_image<bgr_pixel>(image);
-
-    faces = detector(current_image);
-
-    // Find the pose of each face.
-    shapes.clear();
-    for (auto face : faces){
-        shapes.push_back(pose_model(current_image, face));
-    }
+	current_image = cv_image<bgr_pixel>(image);
+	shapes.clear();
+	// Perform subsampling, if the variable 'subsample_detection_frame' > 0. Subsampling is only
+	// performed on the detection frame.
+	if(subsample_detection_frame>0){
+		Mat image_subsample;
+		cv::resize(image,image_subsample, cv::Size(0,0), 1/subsample_detection_frame, 1/subsample_detection_frame);
+		dlib::cv_image<dlib::bgr_pixel> image_sub = cv_image<bgr_pixel>(image_subsample);
+		faces = detector(image_sub,_UPSAMPLE);
+	}
+	else{
+		faces = detector(current_image,_UPSAMPLE);
+	}
+	for (auto face : faces){
+		if(subsample_detection_frame>0){
+			// Rescale the x an y axes of the locations of the faces
+			int left, right, top, bottom;
+			left	= int(face.left()*subsample_detection_frame);
+			top		= int(face.top()*subsample_detection_frame);
+			right	= int(face.right()*subsample_detection_frame);
+			bottom	= int(face.bottom()*subsample_detection_frame);
+			face	= dlib::rectangle(left,top,right,bottom);
+		}
+		// Find the pose of each face.
+		shapes.push_back(pose_model(current_image, face));
+	}
 
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
     // Draws the contours of the face and face features onto the image
@@ -140,7 +156,7 @@ head_pose HeadPoseEstimation::pose(size_t face_idx) const
     auto stomion = (coordsOf(face_idx, MOUTH_CENTER_TOP) + coordsOf(face_idx, MOUTH_CENTER_BOTTOM)) * 0.5;
     detected_points.push_back(stomion);
 
-    Mat rvec, tvec;
+    cv::Mat rvec, tvec;
 
     // Find the 3D pose of our head
     solvePnP(head_points, detected_points,
@@ -151,12 +167,11 @@ head_pose HeadPoseEstimation::pose(size_t face_idx) const
 #else
             cv::ITERATIVE);
 #endif
-
     Matx33d rotation;
     Rodrigues(rvec, rotation);
 
 
-    head_pose pose = {
+    cv::Matx44d pose = {
         rotation(0,0),    rotation(0,1),    rotation(0,2),    tvec.at<double>(0)/1000,
         rotation(1,0),    rotation(1,1),    rotation(1,2),    tvec.at<double>(1)/1000,
         rotation(2,0),    rotation(2,1),    rotation(2,2),    tvec.at<double>(2)/1000,
@@ -190,8 +205,11 @@ head_pose HeadPoseEstimation::pose(size_t face_idx) const
 
 
 #endif
+	head_pose pose_head	=	{pose,	// transformation matrix
+							tvec,	// vector with translations
+							rvec};	// vector with rotations
 
-    return pose;
+    return pose_head;
 }
 
 std::vector<head_pose> HeadPoseEstimation::poses() const {

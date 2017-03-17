@@ -48,7 +48,8 @@ int main(int argc, char **argv)
     auto nbfaces = 0;
 
     for(size_t i = 0; i < NB_TESTS; i++) {
-        estimator.update(img);
+    	double subsample_detection_image = 0;
+        estimator.update(img,subsample_detection_image);
     }
     auto t_detection = getTickCount();
 
@@ -62,7 +63,7 @@ int main(int argc, char **argv)
 
     auto poses = estimator.poses();
     for(auto pose : poses) {
-    cout << "Head pose: (" << pose(0,3) << ", " << pose(1,3) << ", " << pose(2,3) << ")" << endl;
+    cout << "Head pose: (" << pose.transformation_matrix(0,3) << ", " << pose.transformation_matrix(1,3) << ", " << pose.transformation_matrix(2,3) << ")" << endl;
 
     }
 
